@@ -26,7 +26,7 @@ sc2asmjs.py -h
 asm_payloads/nops.asm (test shellcode)
 asm_payloads/three_byte_stager.asm (3-byte loader executing custom shellcodes)
 asm_payloads/two_byte_stager.asm (2-byte loader executing custom shellcodes)
-asm_payloads/WinExec_cmd.asm (3-byte loader)
+asm_payloads/WinExec_cmd.asm (standalone WinExec shellcode executing cmd.exe)
 ```
 
 * first stage msf payloads (i.e., executed by stage0):
