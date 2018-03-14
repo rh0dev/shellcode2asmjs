@@ -3,7 +3,7 @@
 sc2asm.py should allow you to generate arbitrary payloads for ASM.JS JIT-Spray
 for Firefox 32-bit < 51 (Windows). More Information about ASM.JS JIT-Spray can be found
 in the [slides](https://github.com/rh0dev/slides/blob/master/OffensiveCon2018_From_Assembly_to_JavaScript_and_back.pdf)
-and [blogposts](https://rh0dev.github.io/blog/2018/more-on-asm-dot-js-payloads-and-exploitation/)
+and [blogposts](https://rh0dev.github.io/blog/2018/more-on-asm-dot-js-payloads-and-exploitation/).
 
 Instead of manually inserting your opcodes into ASM.JS constants, use sc2asmjs.py
 to generate ASM.JS code containing your payload.
