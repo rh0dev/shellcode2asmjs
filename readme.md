@@ -66,6 +66,6 @@ out/WinExec_cmd_static.html
 
 Exploits using ASM.JS JIT-Spray can be found here:
 * [CVE-2016-9079](https://github.com/rh0dev/expdev/blob/master/CVE-2017-5375_ASM.JS_JIT-Spray/CVE-2016-9079_Firefox_50.0.1_DEP_ASLR_Bypass.html)
-* [CVE-2016-2819](https://github.com/rh0dev/expdev/blob/master/CVE-2017-5375_ASM.JS_JIT-Spray/CVE-2016-1960_Firefox_46.0.1_float_pool_spray.html)
-* [CVE-2016-1960](https://github.com/rh0dev/expdev/blob/master/CVE-2017-5375_ASM.JS_JIT-Spray/CVE-2016-2819_Firefox_44.0.2_float_pool_spray.html)
+* [CVE-2016-2819](https://github.com/rh0dev/expdev/blob/master/CVE-2017-5375_ASM.JS_JIT-Spray/CVE-2016-2819_Firefox_46.0.1_float_pool_spray.html)
+* [CVE-2016-1960](https://github.com/rh0dev/expdev/blob/master/CVE-2017-5375_ASM.JS_JIT-Spray/CVE-2016-1960_Firefox_44.0.2_float_pool_spray.html)
 
